@@ -123,9 +123,9 @@ data-reports:
 
 
 email-data-reports:
-	@scp mi_adm@codon-login:$(input-data-path)/$(dr-tag)/$(dr-tag)-$(prev-dr)-diff-report.csv $(staging-path)/$(dr-tag)/artefacts/$(dr-tag)-$(prev-dr)-diff-report.csv
-	@scp mi_adm@codon-login:$(input-data-path)/$(dr-tag)/part-*.txt $(staging-path)/$(dr-tag)/artefacts/
-	@scp mi_adm@codon-login:$(input-data-path)/data-archive/emails/* $(staging-path)/$(dr-tag)/artefacts/
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/$(dr-tag)/$(dr-tag)-$(prev-dr)-diff-report.csv $(staging-path)/$(dr-tag)/artefacts/$(dr-tag)-$(prev-dr)-diff-report.csv
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/$(dr-tag)/part-*.txt $(staging-path)/$(dr-tag)/artefacts/
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/data-archive/emails/* $(staging-path)/$(dr-tag)/artefacts/
 	@python3 util/fill_in_dr_report_emails.py $(dr-tag) $(prev-dr) $(staging-path)/$(dr-tag)/artefacts/ $(etl-dir)
 
 
@@ -143,11 +143,11 @@ imaging-data-download:
 	@if [ ! -d "$(staging-path)/$(dr-tag)/logs" ]; then mkdir $(staging-path)/$(dr-tag)/logs; fi
 	@if [ -f "$(staging-path)/$(dr-tag)/artefacts/media_data/$(dr-tag)_media_data.json" ]; then rm -rf $(staging-path)/$(dr-tag)/artefacts/media_data/$(dr-tag)_media_data.json; fi
 
-	@scp mi_adm@codon-login:$(input-data-path)/imaging-data-archive/media_data/* $(staging-path)/$(dr-tag)/artefacts/media_data/
-	@scp mi_adm@codon-login:$(input-data-path)/imaging-data-archive/omero_dev.properties $(staging-path)/$(dr-tag)/artefacts/omero_dev.properties
-	@scp mi_adm@codon-login:$(input-data-path)/imaging-data-archive/base_omero_image_data/image_data.list $(staging-path)/$(dr-tag)/artefacts/image_data.list
-	@scp mi_adm@codon-login:$(input-data-path)/imaging-data-archive/base_omero_image_data/images_data/* $(staging-path)/$(dr-tag)/artefacts/images_data/
-	@scp mi_adm@codon-login:$(input-data-path)/imaging-data-archive/dr_omero_image_data/* $(staging-path)/$(dr-tag)/artefacts/images_data/
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/media_data/* $(staging-path)/$(dr-tag)/artefacts/media_data/
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/omero_dev.properties $(staging-path)/$(dr-tag)/artefacts/omero_dev.properties
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/base_omero_image_data/image_data.list $(staging-path)/$(dr-tag)/artefacts/image_data.list
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/base_omero_image_data/images_data/* $(staging-path)/$(dr-tag)/artefacts/images_data/
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/dr_omero_image_data/* $(staging-path)/$(dr-tag)/artefacts/images_data/
 
 	@python3 imaging/CreateImagingFolders.py $(staging-path)/$(dr-tag)/artefacts/media_data/$(dr-tag)_media_data.json $(staging-path)/$(dr-tag)/images/
 	@python3 imaging/DownloadImages.py $(staging-path)/$(dr-tag)/artefacts/media_data/$(dr-tag)_media_data.json $(staging-path)/$(dr-tag)/artefacts/images_data $(staging-path)/$(dr-tag)/images/ $(staging-path)/$(dr-tag)/logs/$(dr-tag)_imagedownload.out
@@ -168,7 +168,7 @@ imaging-data-csv-check:
 
 
 imaging-data-csv-process:
-	@scp mi_adm@codon-login:$(input-data-path)/imaging-data-archive/$(dr-tag)/impc_images_input_wo_omero_ids.csv $(staging-path)/$(dr-tag)/artefacts/impc_images_input_wo_omero_ids.csv
+	@scp mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/$(dr-tag)/impc_images_input_wo_omero_ids.csv $(staging-path)/$(dr-tag)/artefacts/impc_images_input_wo_omero_ids.csv
 	@if [ -f "$(staging-path)/$(dr-tag)/artefacts/impc_images_input_wo_omero_ids.csv" ]; then echo "CSV file successfully copied across for processing"; else "ERROR: Cannot find CSV file!" && exit -1; fi
 	@export PYTHONPATH=$(staging-path)/$(dr-tag)/impc-etl && python3 imaging/CheckForMissingImagesInPipelineCSV.py $(dr-tag) $(staging-path)/$(dr-tag)/artefacts/impc_images_input_wo_omero_ids.csv $(staging-path)/$(dr-tag)/artefacts/media_data
 
@@ -176,9 +176,9 @@ imaging-data-csv-process:
 imaging-data-add-omero-ids-and-wrapup:
 	@PYTHONPATH=$(pwd):$PYTHONPATH
 	@export PYTHONPATH=$(staging-path)/$(dr-tag)/impc-etl && python3 imaging/AddOmeroIdsToCSVFile.py $(staging-path)/$(dr-tag)/artefacts/impc_images_input_wo_omero_ids.csv $(staging-path)/$(dr-tag)/artefacts/impc_images_input_with_omero_ids.csv $(staging-path)/$(dr-tag)/artefacts/media_data $(staging-path)/$(dr-tag)/artefacts/images_data
-	@scp $(staging-path)/$(dr-tag)/artefacts/impc_images_input_with_omero_ids.csv mi_adm@codon-login:$(input-data-path)/imaging-data-archive/$(dr-tag)/impc_images_input_with_omero_ids.csv
-	@scp $(staging-path)/$(dr-tag)/artefacts/media_data/$(dr-tag)_media_data.json mi_adm@codon-login:$(input-data-path)/imaging-data-archive/media_data/$(dr-tag)_media_data.json
-	@scp $(staging-path)/$(dr-tag)/artefacts/images_data/$(dr-tag)_imagedata.json mi_adm@codon-login:$(input-data-path)/imaging-data-archive/dr_omero_image_data/$(dr-tag)_imagedata.json
+	@scp $(staging-path)/$(dr-tag)/artefacts/impc_images_input_with_omero_ids.csv mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/$(dr-tag)/impc_images_input_with_omero_ids.csv
+	@scp $(staging-path)/$(dr-tag)/artefacts/media_data/$(dr-tag)_media_data.json mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/media_data/$(dr-tag)_media_data.json
+	@scp $(staging-path)/$(dr-tag)/artefacts/images_data/$(dr-tag)_imagedata.json mi_adm@codon-slurm-login:$(input-data-path)/imaging-data-archive/dr_omero_image_data/$(dr-tag)_imagedata.json
 
 
 imaging-data-move-csv-to-hadoop:
